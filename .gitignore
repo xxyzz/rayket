@@ -1,0 +1,5 @@
+# retarded file
+.DS_Store
+
+# image
+*.ppm
