@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require racket/class)
+(require racket/class racket/flonum)
 (require "vec3.rkt" "ray.rkt" "hittable.rkt")
 
 (provide sphere%)
@@ -17,16 +17,16 @@
       (let* ([oc (vec-sub (ray-origin r) center-field)]
              [a (vec-length-squared (ray-direction r))]
              [half-b (vec-dot oc (ray-direction r))]
-             [c (- (vec-length-squared oc) (* radius-field radius-field))]
-             [discriminant (- (* half-b half-b) (* a c))])
+             [c (fl- (vec-length-squared oc) (fl* radius-field radius-field))]
+             [discriminant (fl- (fl* half-b half-b) (fl* a c))])
         (if (negative? discriminant)
             null
-            (let* ([sqrtd (sqrt discriminant)]
-                   [root-1 (/ (- (- half-b) sqrtd) a)]
-                   [root-2 (/ (+ (- half-b) sqrtd) a)])
-              (cond [(and (>= root-1 t-min) (<= root-1 t-max))
+            (let* ([sqrtd (flsqrt discriminant)]
+                   [root-1 (fl/ (fl- (fl- half-b) sqrtd) a)]
+                   [root-2 (fl/ (fl+ (fl- half-b) sqrtd) a)])
+              (cond [(and (fl>= root-1 t-min) (fl<= root-1 t-max))
                      (make-hit-record root-1 (ray-at r root-1) r)]
-                    [(and (>= root-2 t-min) (<= root-2 t-max))
+                    [(and (fl>= root-2 t-min) (fl<= root-2 t-max))
                      (make-hit-record root-2 (ray-at r root-2) r)]
                     [else null])))))
 

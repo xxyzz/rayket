@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require racket/class)
+(require racket/class racket/flonum)
 (require "vec3.rkt" "ray.rkt" "hittable.rkt")
 
 (provide lambertian% metal% dielectric%)
@@ -29,7 +29,7 @@
   (class material%
     (init albedo fuzz)
     (define albedo-field albedo)
-    (define fuzz-field (if (< fuzz 1) fuzz 1))
+    (define fuzz-field (if (fl< fuzz 1.0) fuzz 1.0))
     (super-new [albedo albedo-field])
 
     (define/public (scatter r rec)
@@ -44,16 +44,16 @@
   (class material%
     (init index-of-refraction)
     (define ir index-of-refraction)
-    (super-new [albedo #(1 1 1)])
+    (super-new [albedo (flvector 1.0 1.0 1.0)])
 
     (define/public (scatter r rec)
       ;; https://en.wikipedia.org/wiki/Snell's_law
-      (let* ([refraction-ratio (if (hit-record-front-face rec) (/ 1 ir) ir)]
+      (let* ([refraction-ratio (if (hit-record-front-face rec) (fl/ 1.0 ir) ir)]
              [unit-direction (unit-vector (ray-direction r))]
-             [cos-theta (min 1 (vec-dot (vec-neg unit-direction) (hit-record-normal rec)))]
-             [sin-theta (sqrt (- 1 (* cos-theta cos-theta)))]
-             [direction (if (or (> (* refraction-ratio sin-theta) 1)
-                                (> (reflactance cos-theta refraction-ratio) (random)))
+             [cos-theta (flmin 1.0 (vec-dot (vec-neg unit-direction) (hit-record-normal rec)))]
+             [sin-theta (flsqrt (fl- 1.0 (fl* cos-theta cos-theta)))]
+             [direction (if (or (fl> (fl* refraction-ratio sin-theta) 1.0)
+                                (fl> (reflactance cos-theta refraction-ratio) (random)))
                             (reflect unit-direction (hit-record-normal rec))  ;; total internal reflection
                             (refract unit-direction (hit-record-normal rec) refraction-ratio))])
         (ray (hit-record-p rec) direction)))
@@ -61,8 +61,8 @@
     ;; Use Schlick's approximation for reflectance
     ;; https://en.wikipedia.org/wiki/Schlick%27s_approximation
     (define/private (reflactance cos-theta refraction-ratio)
-      (let* ([r (/ (- 1 refraction-ratio) (add1 refraction-ratio))]
-             [r0 (* r r)])
-        (+ r0
-           (* (- 1 r0)
-              (expt (- 1 cos-theta) 5)))))))
+      (let* ([r (fl/ (fl- 1.0 refraction-ratio) (add1 refraction-ratio))]
+             [r0 (fl* r r)])
+        (fl+ r0
+             (fl* (fl- 1.0 r0)
+                  (flexpt (fl- 1.0 cos-theta) 5.0)))))))
