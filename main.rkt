@@ -20,7 +20,7 @@
                        (vec-mul-val (flvector 0.5 0.7 1.0) t)))))))
 
 ;; Image
-(define image-width 1200.0)
+(define image-width 600.0)
 (define image-height (flfloor (fl/ image-width aspect-ratio)))
 (define samples-per-pixel 100.0)
 (define max-depth 50.0)
