@@ -19,28 +19,59 @@
                        (vec-mul-val (vector 0.5 0.7 1) t)))))))
 
 ;; Image
-(define image-width 400)
+(define image-width 1200)
 (define image-height (floor (/ image-width aspect-ratio)))
 (define samples-per-pixel 100)
 (define max-depth 50)
 
-(define world
+(define big-spheres
   (list (new sphere%  ;; ground
-             [center #(0 -100.5 -1)]
-             [radius 100]
-             [material (new lambertian% [albedo #(0.8 0.8 0)])])
+             [center #(0 -1000 0)]
+             [radius 1000]
+             [material (new lambertian% [albedo #(0.5 0.5 0.5)])])
         (new sphere%  ;; center
-             [center #(0 0 -1)]
-             [radius 0.5]
-             [material (new lambertian% [albedo #(0.1 0.2 0.5)])])
-        (new sphere%  ;; left
-             [center #(-1 0 -1)]
-             [radius 0.5]
+             [center #(0 1 0)]
+             [radius 1]
              [material (new dielectric% [index-of-refraction 1.5])])
+        (new sphere%  ;; left
+             [center #(-4 1 0)]
+             [radius 1]
+             [material (new lambertian% [albedo #(0.1 0.2 0.5)])])
         (new sphere% ;; right
-             [center #(1 0 -1)]
-             [radius 0.5]
-             [material (new metal% [albedo #(0.8 0.6 0.2)] [fuzz 0.3])])))
+             [center #(4 1 0)]
+             [radius 1]
+             [material (new metal% [albedo #(0.7 0.6 0.5)] [fuzz 0])])))
+
+(define (random-small-spheres)
+  (for*/list ([a (in-range -11 11)]
+              [b (in-range -11 11)])
+    (let ([choose-mat (random)]
+          [center (vector (+ a (* 0.9 (random)))
+                          0.2
+                          (+ b (* 0.9 (random))))])
+      (when (> (vec-length (vec-sub center #(4 0.2 0))) 0.9)
+        (cond [(< choose-mat 0.8)  ;; diffuse
+               (new sphere%
+                    [center center]
+                    [radius 0.2]
+                    [material (new lambertian%
+                                   [albedo (vec-mul (random-vec) (random-vec))])])]
+              [(< choose-mat 0.95) ;; metal
+               (new sphere%
+                    [center center]
+                    [radius 0.2]
+                    [material (new metal%
+                                   [albedo (random-vec-range 0.5 1)]
+                                   [fuzz (random-inexact-range 0 0.5)])])]
+              [else  ;; glass
+               (new sphere%
+                    [center center]
+                    [radius 0.2]
+                    [material (new dielectric% [index-of-refraction 1.5])])])))))
+
+(define world (append big-spheres
+                      (filter (lambda (x) (not (void? x)))
+                              (random-small-spheres))))
 
 ;; Render
 ;; portable pixmap format: https://en.wikipedia.org/wiki/Netpbm

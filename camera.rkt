@@ -5,14 +5,14 @@
 
 (provide camera-get-ray aspect-ratio)
 
-(define aspect-ratio (/ 16 9))
+(define aspect-ratio (/ 3 2))
 (define vfov 20)  ;; vertical field-of-view in degrees
 (define theta (degrees->radians vfov))
 (define viewport-height (* 2 (tan (/ theta 2))))
 (define viewport-width (* viewport-height aspect-ratio))
 
-(define lookfrom #(3 3 2))
-(define lookat #(0 0 -1))
+(define lookfrom #(13 2 3))
+(define lookat #(0 0 0))
 (define vup #(0 1 0))
 
 (define w (unit-vector (vec-sub lookfrom lookat)))
@@ -20,8 +20,8 @@
 (define v (vec-cross w u))
 
 (define origin lookfrom)
-(define focus-dist (vec-length (vec-sub lookfrom lookat)))
-(define aperture 2)
+(define focus-dist 10)
+(define aperture 0.1)
 (define lens-radius (/ aperture 2))
 
 (define horizontal (vec-mul-val u (* viewport-width focus-dist)))

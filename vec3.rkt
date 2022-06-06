@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/vector)  ;; vector-map
 
-(provide vec-add vec-mul-val vec-div-val vec-neg vec-length vec-length-squared vec-sub vec-mul vec-div vec-dot vec-cross unit-vector vec-x vec-y vec-z random-in-unit-sphere random-unit-vector near-zero? reflect refract random-in-unit-disk)
+(provide vec-add vec-mul-val vec-div-val vec-neg vec-length vec-length-squared vec-sub vec-mul vec-div vec-dot vec-cross unit-vector vec-x vec-y vec-z random-in-unit-sphere random-unit-vector near-zero? reflect refract random-in-unit-disk random-inexact-range random-vec random-vec-range)
 
 (define (vec-x vec)
   (vector-ref vec 0))
@@ -98,3 +98,11 @@
     (if (< (vec-length-squared vec) 1)
         vec
         (random-in-unit-disk))))
+
+(define (random-vec)
+  (for/vector ([_ (in-range 3)])
+    (random)))
+
+(define (random-vec-range min-val max-val)
+  (for/vector ([_ (in-range 3)])
+    (random-inexact-range min-val max-val)))
