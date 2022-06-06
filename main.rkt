@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require racket/class racket/flonum racket/date)
+(require racket/class racket/flonum)
 (require "color.rkt" "vec3.rkt" "ray.rkt" "hittable.rkt" "sphere.rkt" "camera.rkt" "material.rkt")
 
 (define (ray-color r world depth)
@@ -13,9 +13,10 @@
                   (vec-mul (ray-color scatter-ray world (sub1 depth))
                            (send (hit-record-material rec) get-attenuation))
                   (flvector 0.0 0.0 0.0)))
+            ;; blend white and blue
             (let* ([unit-direction (unit-vector (ray-direction r))]
                    [t (fl/ (add1 (vec-y unit-direction)) 2.0)]) ;; 0 <= t <= 1
-              (vec-add (vec-mul-val (flvector 1.0 1.0 1.0) (fl- 1.0 t))  ;; blend white and blue
+              (vec-add (vec-mul-val (flvector 1.0 1.0 1.0) (fl- 1.0 t))
                        (vec-mul-val (flvector 0.5 0.7 1.0) t)))))))
 
 ;; Image
@@ -75,12 +76,14 @@
 
 ;; Render
 ;; portable pixmap format: https://en.wikipedia.org/wiki/Netpbm
-(display (format "P3\n~a ~a\n~a\n" image-width image-height max-color-value))
+(display (format "P3\n~a ~a\n~a\n"
+                 (fl->exact-integer image-width)
+                 (fl->exact-integer image-height)
+                 (fl->exact-integer max-color-value)))
 (for* ([j (in-range (sub1 image-height) -1.0 -1.0)]
        [i (in-range 0.0 image-width)])
   (when (zero? i)
-    (display (current-date) (current-error-port))
-    (display (format "\nScanlines remaining: ~a\n\n" j) (current-error-port)))
+    (display (format "Scanlines remaining: ~a\n" j) (current-error-port)))
   ;; anti-aliasing
   (write-color (for/fold ([pixel-color (flvector 0.0 0.0 0.0)])
                          ([_ (in-range samples-per-pixel)])
