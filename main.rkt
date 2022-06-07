@@ -23,7 +23,7 @@
 (define image-width 600.0)
 (define image-height (flfloor (fl/ image-width aspect-ratio)))
 (define samples-per-pixel 100.0)
-(define max-depth 50.0)
+(define max-depth 50)
 
 (define big-spheres
   (list (new sphere%  ;; ground

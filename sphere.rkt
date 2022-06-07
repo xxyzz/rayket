@@ -22,13 +22,13 @@
         (if (negative? discriminant)
             null
             (let* ([sqrtd (flsqrt discriminant)]
-                   [root-1 (fl/ (fl- (fl- half-b) sqrtd) a)]
-                   [root-2 (fl/ (fl+ (fl- half-b) sqrtd) a)])
-              (cond [(and (fl>= root-1 t-min) (fl<= root-1 t-max))
-                     (make-hit-record root-1 (ray-at r root-1) r)]
-                    [(and (fl>= root-2 t-min) (fl<= root-2 t-max))
-                     (make-hit-record root-2 (ray-at r root-2) r)]
-                    [else null])))))
+                   [root-1 (fl/ (fl- (fl- half-b) sqrtd) a)])
+              (if (and (fl>= root-1 t-min) (fl<= root-1 t-max))
+                  (make-hit-record root-1 (ray-at r root-1) r)
+                  (let ([root-2 (fl/ (fl+ (fl- half-b) sqrtd) a)])
+                    (if (and (fl>= root-2 t-min) (fl<= root-2 t-max))
+                        (make-hit-record root-2 (ray-at r root-2) r)
+                        null)))))))
 
     (define/private (make-hit-record t point r)
       (let* ([normal (vec-div-val (vec-sub point center-field) radius-field)]

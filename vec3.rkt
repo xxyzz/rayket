@@ -73,7 +73,9 @@
   (vec-div-val vec (vec-length vec)))
 
 (define (random-in-unit-sphere)
-  (let ([p (flvector (random) (random) (random))])
+  (let ([p (flvector (random-inexact-range -1.0 1.0)
+                     (random-inexact-range -1.0 1.0)
+                     (random-inexact-range -1.0 1.0))])
     (if (fl< (vec-length-squared p) 1.0)
         p
         (random-in-unit-sphere))))
