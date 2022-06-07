@@ -22,8 +22,8 @@
                                         (random-unit-vector))])
         ;; Catch degenerate scatter direction
         (if (near-zero? scatter-direction)
-            (ray (hit-record-p rec) (hit-record-normal rec))
-            (ray (hit-record-p rec) scatter-direction))))))
+            (ray (hit-record-p rec) (hit-record-normal rec) (ray-time r))
+            (ray (hit-record-p rec) scatter-direction (ray-time r)))))))
 
 (define metal%
   (class material%
@@ -37,7 +37,8 @@
                                 (hit-record-normal rec))])
         (if (positive? (vec-dot reflected (hit-record-normal rec)))
             (ray (hit-record-p rec)
-                 (vec-add reflected (vec-mul-val (random-in-unit-sphere) fuzz-field)))
+                 (vec-add reflected (vec-mul-val (random-in-unit-sphere) fuzz-field))
+                 (ray-time r))
             null)))))
 
 (define dielectric%  ;; glass
@@ -56,7 +57,7 @@
                                 (fl> (reflactance cos-theta refraction-ratio) (random)))
                             (reflect unit-direction (hit-record-normal rec))  ;; total internal reflection
                             (refract unit-direction (hit-record-normal rec) refraction-ratio))])
-        (ray (hit-record-p rec) direction)))
+        (ray (hit-record-p rec) direction (ray-time r))))
 
     ;; Use Schlick's approximation for reflectance
     ;; https://en.wikipedia.org/wiki/Schlick%27s_approximation

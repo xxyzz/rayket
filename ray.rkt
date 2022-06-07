@@ -4,7 +4,7 @@
 
 (provide ray-at (struct-out ray))
 
-(struct ray (origin direction))
+(struct ray (origin direction time))
 
 (define (ray-at r t)
   (vec-add (ray-origin r)

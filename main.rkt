@@ -20,7 +20,7 @@
                        (vec-mul-val (flvector 0.5 0.7 1.0) t)))))))
 
 ;; Image
-(define image-width 600.0)
+(define image-width 400.0)
 (define image-height (flfloor (fl/ image-width aspect-ratio)))
 (define samples-per-pixel 100.0)
 (define max-depth 50)
@@ -52,8 +52,12 @@
                             (fl+ b (fl* 0.9 (random))))])
       (when (fl> (vec-length (vec-sub center (flvector 4.0 0.2 0.0))) 0.9)
         (cond [(fl< choose-mat 0.8)  ;; diffuse
-               (new sphere%
-                    [center center]
+               (new moving-sphere%
+                    [center0 center]
+                    [center1 (vec-add center
+                                      (flvector 0.0 (random-inexact-range 0.0 0.5) 0.0))]
+                    [time0 0.0]
+                    [time1 1.0]
                     [radius 0.2]
                     [material (new lambertian%
                                    [albedo (vec-mul (random-vec) (random-vec))])])]

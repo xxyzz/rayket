@@ -6,7 +6,7 @@
 
 (provide camera-get-ray aspect-ratio)
 
-(define aspect-ratio (fl/ 3.0 2.0))
+(define aspect-ratio (fl/ 16.0 9.0))
 (define vfov 20.0)  ;; vertical field-of-view in degrees
 (define theta (degrees->radians vfov))
 (define viewport-height (fl* 2.0 (fltan (fl/ theta 2.0))))
@@ -33,6 +33,9 @@
            (vec-div-val vertical 2.0)
            (vec-mul-val w focus-dist)))
 
+(define time0 0.0)
+(define time1 1.0)
+
 (define (camera-get-ray s t)
   (let* ([rd (vec-mul-val (random-in-unit-disk) lens-radius)]
          [offset (vec-add (vec-mul-val u (vec-x rd))
@@ -42,4 +45,5 @@
                   (vec-mul-val horizontal s)
                   (vec-mul-val vertical t)
                   (vec-neg origin)
-                  (vec-neg offset)))))
+                  (vec-neg offset))
+         (random-inexact-range time0 time1))))
