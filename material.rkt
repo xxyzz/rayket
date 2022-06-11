@@ -5,16 +5,9 @@
 
 (provide lambertian% metal% dielectric%)
 
-(define material%
-  (class object%
-    (init albedo)
-    (define albedo-field albedo)
-    (super-new)
-    (define/public (get-attenuation)
-      albedo-field)))
-
 (define lambertian%
-  (class material%
+  (class object%
+    (init-field albedo)
     (super-new)
 
     (define/public (scatter r rec)
@@ -26,11 +19,10 @@
             (ray (hit-record-p rec) scatter-direction (ray-time r)))))))
 
 (define metal%
-  (class material%
-    (init albedo fuzz)
-    (define albedo-field albedo)
-    (define fuzz-field (if (fl< fuzz 1.0) fuzz 1.0))
-    (super-new [albedo albedo-field])
+  (class object%
+    (init-field albedo fuzz)
+    (field [fuzz-field (if (fl< fuzz 1.0) fuzz 1.0)])
+    (super-new)
 
     (define/public (scatter r rec)
       (let ([reflected (reflect (unit-vector (ray-direction r))
@@ -42,14 +34,16 @@
             null)))))
 
 (define dielectric%  ;; glass
-  (class material%
-    (init index-of-refraction)
-    (define ir index-of-refraction)
-    (super-new [albedo (flvector 1.0 1.0 1.0)])
+  (class object%
+    (init-field index-of-refraction)
+    (field [albedo (flvector 1.0 1.0 1.0)])
+    (super-new)
 
     (define/public (scatter r rec)
       ;; https://en.wikipedia.org/wiki/Snell's_law
-      (let* ([refraction-ratio (if (hit-record-front-face rec) (fl/ 1.0 ir) ir)]
+      (let* ([refraction-ratio (if (hit-record-front-face rec)
+                                   (fl/ 1.0 index-of-refraction)
+                                   index-of-refraction)]
              [unit-direction (unit-vector (ray-direction r))]
              [cos-theta (flmin 1.0 (vec-dot (vec-neg unit-direction) (hit-record-normal rec)))]
              [sin-theta (flsqrt (fl- 1.0 (fl* cos-theta cos-theta)))]
@@ -62,7 +56,7 @@
     ;; Use Schlick's approximation for reflectance
     ;; https://en.wikipedia.org/wiki/Schlick%27s_approximation
     (define/private (reflactance cos-theta refraction-ratio)
-      (let* ([r (fl/ (fl- 1.0 refraction-ratio) (add1 refraction-ratio))]
+      (let* ([r (fl/ (fl- 1.0 refraction-ratio) (fl+ 1.0 refraction-ratio))]
              [r0 (fl* r r)])
         (fl+ r0
              (fl* (fl- 1.0 r0)

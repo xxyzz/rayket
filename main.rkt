@@ -1,21 +1,21 @@
 #lang racket/base
 
 (require racket/class racket/flonum)
-(require "color.rkt" "vec3.rkt" "ray.rkt" "hittable.rkt" "sphere.rkt" "camera.rkt" "material.rkt")
+(require "color.rkt" "vec3.rkt" "ray.rkt" "hittable.rkt" "sphere.rkt" "camera.rkt" "material.rkt" "bvh.rkt")
 
 (define (ray-color r world depth)
   (if (zero? depth)
       (flvector 0.0 0.0 0.0)
-      (let ([rec (hit-any? world r 0.001 +inf.0)])
+      (let ([rec (send world hit r 0.001 +inf.0)])
         (if (not (null? rec))
             (let ([scatter-ray (send (hit-record-material rec) scatter r rec)])
               (if (not (null? scatter-ray))
                   (vec-mul (ray-color scatter-ray world (sub1 depth))
-                           (send (hit-record-material rec) get-attenuation))
+                           (get-field albedo (hit-record-material rec)))
                   (flvector 0.0 0.0 0.0)))
             ;; blend white and blue
             (let* ([unit-direction (unit-vector (ray-direction r))]
-                   [t (fl/ (add1 (vec-y unit-direction)) 2.0)]) ;; 0 <= t <= 1
+                   [t (fl/ (fl+ 1.0 (vec-y unit-direction)) 2.0)]) ;; 0 <= t <= 1
               (vec-add (vec-mul-val (flvector 1.0 1.0 1.0) (fl- 1.0 t))
                        (vec-mul-val (flvector 0.5 0.7 1.0) t)))))))
 
@@ -74,9 +74,12 @@
                     [radius 0.2]
                     [material (new dielectric% [index-of-refraction 1.5])])])))))
 
-(define world (append big-spheres
-                      (filter (lambda (x) (not (void? x)))
-                              (random-small-spheres))))
+(define world (new bvh-node%
+                   [objects (append big-spheres
+                                    (filter (lambda (x) (not (void? x)))
+                                            (random-small-spheres)))]
+                   [time0 0.0]
+                   [time1 1.0]))
 
 ;; Render
 ;; portable pixmap format: https://en.wikipedia.org/wiki/Netpbm
@@ -84,15 +87,16 @@
                  (fl->exact-integer image-width)
                  (fl->exact-integer image-height)
                  (fl->exact-integer max-color-value)))
-(for* ([j (in-range (sub1 image-height) -1.0 -1.0)]
+(for* ([j (in-range (fl- image-height 1.0) -1.0 -1.0)]
        [i (in-range 0.0 image-width)])
   (when (zero? i)
-    (display (format "Scanlines remaining: ~a\n" j) (current-error-port)))
+    (display (format "Scanlines remaining: ~a\n" (fl->exact-integer j))
+             (current-error-port)))
   ;; anti-aliasing
   (write-color (for/fold ([pixel-color (flvector 0.0 0.0 0.0)])
                          ([_ (in-range samples-per-pixel)])
-                 (let ([u (fl/ (fl+ i (random)) (sub1 image-width))]
-                       [v (fl/ (fl+ j (random)) (sub1 image-height))])
+                 (let ([u (fl/ (fl+ i (random)) (fl- image-width 1.0))]
+                       [v (fl/ (fl+ j (random)) (fl- image-height 1.0))])
                    (vec-add pixel-color
                             (ray-color (camera-get-ray u v) world max-depth))))
                samples-per-pixel))
