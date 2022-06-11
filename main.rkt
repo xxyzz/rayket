@@ -1,17 +1,18 @@
 #lang racket/base
 
 (require racket/class racket/flonum)
-(require "color.rkt" "vec3.rkt" "ray.rkt" "hittable.rkt" "sphere.rkt" "camera.rkt" "material.rkt" "bvh.rkt")
+(require "color.rkt" "vec3.rkt" "ray.rkt" "hittable.rkt" "sphere.rkt" "camera.rkt" "material.rkt" "bvh.rkt" "texture.rkt")
 
 (define (ray-color r world depth)
   (if (zero? depth)
       (flvector 0.0 0.0 0.0)
       (let ([rec (send world hit r 0.001 +inf.0)])
         (if (not (null? rec))
-            (let ([scatter-ray (send (hit-record-material rec) scatter r rec)])
+            (let-values ([(scatter-ray color)
+                          (send (hit-record-material rec) scatter r rec)])
               (if (not (null? scatter-ray))
                   (vec-mul (ray-color scatter-ray world (sub1 depth))
-                           (get-field albedo (hit-record-material rec)))
+                           color)
                   (flvector 0.0 0.0 0.0)))
             ;; blend white and blue
             (let* ([unit-direction (unit-vector (ray-direction r))]
@@ -29,7 +30,10 @@
   (list (new sphere%  ;; ground
              [center (flvector 0.0 -1000.0 0.0)]
              [radius 1000.0]
-             [material (new lambertian% [albedo (flvector 0.5 0.5 0.5)])])
+             [material (new lambertian%
+                            [albedo (new checker-texture%
+                                     [color0 (flvector 0.2 0.3 0.1)]
+                                     [color1 (flvector 0.9 0.9 0.9)])])])
         (new sphere%  ;; center
              [center (flvector 0.0 1.0 0.0)]
              [radius 1.0]

@@ -12,11 +12,20 @@
 
     (define/public (scatter r rec)
       (let ([scatter-direction (vec-add (hit-record-normal rec)
-                                        (random-unit-vector))])
+                                        (random-unit-vector))]
+            [color (if (flvector? albedo)
+                       albedo
+                       (send albedo value
+                             (hit-record-u rec)
+                             (hit-record-v rec)
+                             (hit-record-p rec)))])
+
         ;; Catch degenerate scatter direction
         (if (near-zero? scatter-direction)
-            (ray (hit-record-p rec) (hit-record-normal rec) (ray-time r))
-            (ray (hit-record-p rec) scatter-direction (ray-time r)))))))
+            (values (ray (hit-record-p rec) (hit-record-normal rec) (ray-time r))
+                    color)
+            (values (ray (hit-record-p rec) scatter-direction (ray-time r))
+                    color))))))
 
 (define metal%
   (class object%
@@ -28,10 +37,11 @@
       (let ([reflected (reflect (unit-vector (ray-direction r))
                                 (hit-record-normal rec))])
         (if (positive? (vec-dot reflected (hit-record-normal rec)))
-            (ray (hit-record-p rec)
-                 (vec-add reflected (vec-mul-val (random-in-unit-sphere) fuzz-field))
-                 (ray-time r))
-            null)))))
+            (values (ray (hit-record-p rec)
+                         (vec-add reflected (vec-mul-val (random-in-unit-sphere) fuzz-field))
+                         (ray-time r))
+                    albedo)
+            (values null null))))))
 
 (define dielectric%  ;; glass
   (class object%
@@ -51,7 +61,8 @@
                                 (fl> (reflactance cos-theta refraction-ratio) (random)))
                             (reflect unit-direction (hit-record-normal rec))  ;; total internal reflection
                             (refract unit-direction (hit-record-normal rec) refraction-ratio))])
-        (ray (hit-record-p rec) direction (ray-time r))))
+        (values (ray (hit-record-p rec) direction (ray-time r))
+                albedo)))
 
     ;; Use Schlick's approximation for reflectance
     ;; https://en.wikipedia.org/wiki/Schlick%27s_approximation
