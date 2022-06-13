@@ -78,10 +78,17 @@
                     [radius 0.2]
                     [material (new dielectric% [index-of-refraction 1.5])])])))))
 
+(define pertext (new noise-texture% [scale 4.0]))
 (define world (new bvh-node%
-                   [objects (append big-spheres
-                                    (filter (lambda (x) (not (void? x)))
-                                            (random-small-spheres)))]
+                   [objects
+                    (list (new sphere%
+                               [center (flvector 0.0 -1000.0 0.0)]
+                               [radius 1000.0]
+                               [material (new lambertian% [albedo pertext])])
+                          (new sphere%
+                               [center (flvector 0.0 2.0 0.0)]
+                               [radius 2.0]
+                               [material (new lambertian% [albedo pertext])]))]
                    [time0 0.0]
                    [time1 1.0]))
 

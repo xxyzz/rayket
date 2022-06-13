@@ -36,9 +36,8 @@
   (flsqrt (vec-length-squared vec)))
 
 (define (vec-length-squared vec)
-  (for/fold ([prev 0.0])
-            ([v vec])
-    (fl+ prev (fl* v v))))
+  (for/sum ([v vec])
+    (fl* v v)))
 
 (define (vec-sub vec . rest-vecs)
   (apply flvector-map fl- vec rest-vecs))
@@ -50,10 +49,9 @@
   (apply flvector-map fl/ vec rest-vecs))
 
 (define (vec-dot vec-a vec-b)
-  (for/fold ([sum 0.0])
-            ([a vec-a]
-             [b vec-b])
-    (fl+ sum (fl* a b))))
+  (for/sum ([a vec-a]
+            [b vec-b])
+    (fl* a b)))
 
 (define (vec-cross vec-a vec-b)
   (let ([vec-a-x (vec-x vec-a)]
